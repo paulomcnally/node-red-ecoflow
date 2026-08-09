@@ -97,9 +97,27 @@
         "y": 120,
         "wires": [
             [
-                "ecoflow_func_parse_001"
+                "ecoflow_func_parse_001",
+                "ecoflow_debug_001"
             ]
         ]
+    },
+    {
+        "id": "ecoflow_debug_001",
+        "type": "debug",
+        "z": "ecoflow_tab_001",
+        "name": "MQTT Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 300,
+        "y": 160,
+        "wires": []
     },
     {
         "id": "ecoflow_func_parse_001",
