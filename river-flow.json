@@ -55,7 +55,7 @@
         "name": "EcoFlow MQTT",
         "broker": "mqtt.ecoflow.com",
         "port": "8883",
-        "clientid": "",
+        "clientid": "ANDROID_XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX_1234567890123456789",
         "autoConnect": true,
         "usetls": true,
         "protocolVersion": "4",

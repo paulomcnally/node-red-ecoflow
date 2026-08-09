@@ -115,8 +115,15 @@ Once the broker editor is open, set:
 - **Server**: `mqtt.ecoflow.com` for Global, `mqtt-e.ecoflow.com` for EU
 - **Port**: `8883`
 - **TLS**: enabled
+- **Client ID**: `ANDROID_{uuid}_{user_id}` (replace `{uuid}` with any UUID and `{user_id}` with your numeric user ID)
 - **Username**: `app-...` from the credential script
 - **Password**: from the credential script
+
+> **Important:** EcoFlow requires the MQTT client ID to start with `ANDROID_` and include your numeric `user_id`. If the client ID is wrong, the broker will stay stuck on `connecting`.
+>
+> Example client ID: `ANDROID_12345678-1234-1234-1234-123456789ABC_1561763652559687682`
+>
+> You can generate a UUID from the terminal with `uuidgen`, or use any online UUID generator.
 
 ## Available endpoints
 
