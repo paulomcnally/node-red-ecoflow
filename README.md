@@ -138,7 +138,7 @@ Once the broker editor is open, set:
 | `GET /api/v1/home/battery/ecoflow/river/:name/xboost/on` | X-Boost ON | Enables X-Boost |
 | `GET /api/v1/home/battery/ecoflow/river/:name/xboost/off` | X-Boost OFF | Disables X-Boost |
 | `GET /api/v1/home/battery/ecoflow/river/:name/status` | Status | Returns last known device state |
-| `GET /api/v1/home/battery/ecoflow/river/:name/actions` | Actions | Returns device discovery manifest |
+| `GET /api/v1/home/battery/ecoflow/river/actions` | Actions | Returns device discovery manifest |
 
 Replace `:name` with the device name from your configuration (e.g. `living_room`).
 
@@ -163,7 +163,7 @@ curl http://localhost:1880/api/v1/home/battery/ecoflow/river/living_room/status
 This flow exposes a discovery endpoint that returns a standardized manifest of all supported actions. It is consumed by the [`node-red-home-ui`](https://github.com/paulomcnally/node-red-home-ui) project to render device controls dynamically.
 
 ```bash
-GET /api/v1/home/battery/ecoflow/river/living_room/actions
+GET /api/v1/home/battery/ecoflow/river/actions
 ```
 
 A static copy of this manifest is also available in [`device-manifest.json`](device-manifest.json).

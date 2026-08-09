@@ -259,7 +259,7 @@
         "type": "http in",
         "z": "ecoflow_tab_001",
         "name": "Actions Endpoint",
-        "url": "/api/v1/home/battery/ecoflow/river/:name/actions",
+        "url": "/api/v1/home/battery/ecoflow/river/actions",
         "method": "get",
         "upload": false,
         "swaggerDoc": "",
