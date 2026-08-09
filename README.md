@@ -52,7 +52,7 @@ Keep these credentials safe — they provide access to your devices.
 3. Select the **Clipboard** tab.
 4. Copy the entire contents of `river-flow.json`.
 5. Paste it into the text area and click **Import**.
-6. Double-click the **EcoFlow MQTT** broker node and enter the `username` and `password` from the script output.
+6. Configure the **EcoFlow MQTT** broker (see [MQTT broker configuration](#mqtt-broker-configuration) below).
 7. Double-click the **River Config** node and edit `ECOFLOW_CONFIG` with your device name, serial number and user ID.
 8. Click **Deploy** to activate the flow.
 
@@ -93,7 +93,24 @@ const ECOFLOW_CONFIG = {
 
 ### MQTT broker configuration
 
-Double-click the **EcoFlow MQTT** broker node and set:
+The MQTT broker is a **configuration node**, so it does not appear as a big block on the canvas. You can find it in one of two ways:
+
+#### Option 1: From an MQTT node in the flow
+
+1. In the imported flow, find the node named **EcoFlow Status** (or **Send Command**).
+2. **Double-click** it.
+3. Look at the **Server** field. It shows `EcoFlow MQTT` with a pencil icon ✏️ next to it.
+4. **Double-click** `EcoFlow MQTT` or the pencil icon to open the broker settings.
+
+#### Option 2: From the Configuration Nodes panel
+
+1. Click the **hamburger menu** (top-right) > **Configuration nodes**.
+2. Find **EcoFlow MQTT** in the list.
+3. **Double-click** it to edit.
+
+#### Settings
+
+Once the broker editor is open, set:
 
 - **Server**: `mqtt.ecoflow.com` for Global, `mqtt-e.ecoflow.com` for EU
 - **Port**: `8883`
