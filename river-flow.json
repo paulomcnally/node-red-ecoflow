@@ -1,0 +1,287 @@
+[
+    {
+        "id": "ecoflow_tab_001",
+        "type": "tab",
+        "label": "EcoFlow River",
+        "disabled": false,
+        "info": "Control EcoFlow River power stations via REST API and MQTT"
+    },
+    {
+        "id": "ecoflow_inject_001",
+        "type": "inject",
+        "z": "ecoflow_tab_001",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 60,
+        "wires": [
+            [
+                "ecoflow_func_config_001"
+            ]
+        ]
+    },
+    {
+        "id": "ecoflow_func_config_001",
+        "type": "function",
+        "z": "ecoflow_tab_001",
+        "name": "River Config",
+        "func": "const ECOFLOW_CONFIG = {\n    \"living_room\": {\n        \"serial\": \"R600XXXXXXXX\",\n        \"user_id\": \"1234567890123456789\"\n    }\n};\n\nglobal.set('ECOFLOW_CONFIG', ECOFLOW_CONFIG);\nnode.status({fill: 'green', shape: 'dot', text: Object.keys(ECOFLOW_CONFIG).length + ' device(s)'});\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 60,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ecoflow_broker_001",
+        "type": "mqtt-broker",
+        "name": "EcoFlow MQTT",
+        "broker": "mqtt.ecoflow.com",
+        "port": "8883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": true,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": "",
+        "credentials": {
+            "user": "app-YOUR_MQTT_USERNAME_HERE",
+            "password": "YOUR_MQTT_PASSWORD_HERE"
+        }
+    },
+    {
+        "id": "ecoflow_mqtt_in_001",
+        "type": "mqtt in",
+        "z": "ecoflow_tab_001",
+        "name": "EcoFlow Status",
+        "topic": "/app/device/property/#",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "ecoflow_broker_001",
+        "nl": false,
+        "rap": false,
+        "rh": 0,
+        "inputs": 0,
+        "x": 130,
+        "y": 120,
+        "wires": [
+            [
+                "ecoflow_func_parse_001"
+            ]
+        ]
+    },
+    {
+        "id": "ecoflow_func_parse_001",
+        "type": "function",
+        "z": "ecoflow_tab_001",
+        "name": "Save Status",
+        "func": "const parts = msg.topic.split('/');\nconst serial = parts[parts.length - 1];\n\nif (serial && msg.payload) {\n    global.set('ecoflow_status_' + serial, msg.payload);\n    node.status({fill: 'green', shape: 'dot', text: 'updated ' + serial});\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "ecoflow_http_ctrl_001",
+        "type": "http in",
+        "z": "ecoflow_tab_001",
+        "name": "Control Endpoint",
+        "url": "/api/v1/home/battery/ecoflow/river/:name/:action1/:action2",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 200,
+        "wires": [
+            [
+                "ecoflow_func_ctrl_001"
+            ]
+        ]
+    },
+    {
+        "id": "ecoflow_func_ctrl_001",
+        "type": "function",
+        "z": "ecoflow_tab_001",
+        "name": "Build Command",
+        "func": "const config = global.get('ECOFLOW_CONFIG') || {};\nconst name = msg.req.params.name;\nconst action1 = msg.req.params.action1;\nconst action2 = msg.req.params.action2;\n\nconst device = config[name];\nif (!device) {\n    msg.payload = {\n        status: 'error',\n        message: 'Device \"' + name + '\" not found in configuration. Available: ' + Object.keys(config).join(', ')\n    };\n    msg.statusCode = 404;\n    return [null, msg];\n}\n\nconst commands = {\n    ac: {\n        on: { id: 66, enabled: 1 },\n        off: { id: 66, enabled: 0 }\n    },\n    dc: {\n        on: { id: 34, enabled: 1 },\n        off: { id: 34, enabled: 0 }\n    },\n    beep: {\n        on: { id: 38, enabled: 1 },\n        off: { id: 38, enabled: 0 }\n    },\n    xboost: {\n        on: { id: 66, xboost: 1 },\n        off: { id: 66, xboost: 0 }\n    }\n};\n\nconst cmdGroup = commands[action1];\nif (!cmdGroup || !cmdGroup[action2]) {\n    msg.payload = {\n        status: 'error',\n        message: 'Unknown action \"' + action1 + '/' + action2 + '\"'\n    };\n    msg.statusCode = 400;\n    return [null, msg];\n}\n\nconst params = cmdGroup[action2];\nconst cmdId = Date.now();\n\nconst topic = '/app/' + device.user_id + '/' + device.serial + '/thing/property/set';\nconst command = {\n    from: 'Android',\n    operateType: 'TCP',\n    id: cmdId,\n    lang: 'en-us',\n    params: params,\n    version: '1.0'\n};\n\nconst mqttMsg = {\n    topic: topic,\n    payload: command\n};\n\nmsg.payload = {\n    status: 'ok',\n    action: action1 + '_' + action2,\n    device: name,\n    message: 'Command sent to ' + name\n};\n\nreturn [mqttMsg, msg];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 340,
+        "y": 200,
+        "wires": [
+            [
+                "ecoflow_mqtt_out_001"
+            ],
+            [
+                "ecoflow_http_resp_ctrl_001"
+            ]
+        ]
+    },
+    {
+        "id": "ecoflow_mqtt_out_001",
+        "type": "mqtt out",
+        "z": "ecoflow_tab_001",
+        "name": "Send Command",
+        "topic": "",
+        "qos": "1",
+        "retain": "false",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "ecoflow_broker_001",
+        "x": 560,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "ecoflow_http_resp_ctrl_001",
+        "type": "http response",
+        "z": "ecoflow_tab_001",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 550,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "ecoflow_http_status_001",
+        "type": "http in",
+        "z": "ecoflow_tab_001",
+        "name": "Status Endpoint",
+        "url": "/api/v1/home/battery/ecoflow/river/:name/status",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 300,
+        "wires": [
+            [
+                "ecoflow_func_status_001"
+            ]
+        ]
+    },
+    {
+        "id": "ecoflow_func_status_001",
+        "type": "function",
+        "z": "ecoflow_tab_001",
+        "name": "Get Status",
+        "func": "const config = global.get('ECOFLOW_CONFIG') || {};\nconst name = msg.req.params.name;\nconst device = config[name];\n\nif (!device) {\n    msg.payload = {\n        status: 'error',\n        message: 'Device \"' + name + '\" not found in configuration. Available: ' + Object.keys(config).join(', ')\n    };\n    msg.statusCode = 404;\n    return msg;\n}\n\nconst status = global.get('ecoflow_status_' + device.serial) || null;\n\nmsg.payload = {\n    status: 'ok',\n    action: 'status',\n    device: name,\n    state: status\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 300,
+        "wires": [
+            [
+                "ecoflow_http_resp_status_001"
+            ]
+        ]
+    },
+    {
+        "id": "ecoflow_http_resp_status_001",
+        "type": "http response",
+        "z": "ecoflow_tab_001",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 510,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "ecoflow_http_actions_001",
+        "type": "http in",
+        "z": "ecoflow_tab_001",
+        "name": "Actions Endpoint",
+        "url": "/api/v1/home/battery/ecoflow/river/:name/actions",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 150,
+        "y": 380,
+        "wires": [
+            [
+                "ecoflow_func_actions_001"
+            ]
+        ]
+    },
+    {
+        "id": "ecoflow_func_actions_001",
+        "type": "function",
+        "z": "ecoflow_tab_001",
+        "name": "Manifest",
+        "func": "const manifest = {\n    type: 'battery',\n    brand: 'ecoflow',\n    model: 'river',\n    state_action: 'status',\n    actions: [\n        { id: 'ac_on', label: 'Encender AC', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/ac/on', icon: 'power' },\n        { id: 'ac_off', label: 'Apagar AC', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/ac/off', icon: 'power-off' },\n        { id: 'dc_on', label: 'Encender DC/CAR', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/dc/on', icon: 'car' },\n        { id: 'dc_off', label: 'Apagar DC/CAR', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/dc/off', icon: 'car-off' },\n        { id: 'beep_on', label: 'Beep ON', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/beep/on', icon: 'volume-2' },\n        { id: 'beep_off', label: 'Beep OFF', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/beep/off', icon: 'volume-x' },\n        { id: 'xboost_on', label: 'X-Boost ON', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/xboost/on', icon: 'zap' },\n        { id: 'xboost_off', label: 'X-Boost OFF', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/xboost/off', icon: 'zap-off' },\n        { id: 'status', label: 'Estado', method: 'GET', path: '/api/v1/home/battery/ecoflow/river/{name}/status', icon: 'activity', is_state: true }\n    ]\n};\n\nmsg.payload = manifest;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 330,
+        "y": 380,
+        "wires": [
+            [
+                "ecoflow_http_resp_actions_001"
+            ]
+        ]
+    },
+    {
+        "id": "ecoflow_http_resp_actions_001",
+        "type": "http response",
+        "z": "ecoflow_tab_001",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 510,
+        "y": 380,
+        "wires": []
+    }
+]

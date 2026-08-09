@@ -1,0 +1,17 @@
+{
+  "type": "battery",
+  "brand": "ecoflow",
+  "model": "river",
+  "state_action": "status",
+  "actions": [
+    { "id": "ac_on", "label": "Encender AC", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/ac/on", "icon": "power" },
+    { "id": "ac_off", "label": "Apagar AC", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/ac/off", "icon": "power-off" },
+    { "id": "dc_on", "label": "Encender DC/CAR", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/dc/on", "icon": "car" },
+    { "id": "dc_off", "label": "Apagar DC/CAR", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/dc/off", "icon": "car-off" },
+    { "id": "beep_on", "label": "Beep ON", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/beep/on", "icon": "volume-2" },
+    { "id": "beep_off", "label": "Beep OFF", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/beep/off", "icon": "volume-x" },
+    { "id": "xboost_on", "label": "X-Boost ON", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/xboost/on", "icon": "zap" },
+    { "id": "xboost_off", "label": "X-Boost OFF", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/xboost/off", "icon": "zap-off" },
+    { "id": "status", "label": "Estado", "method": "GET", "path": "/api/v1/home/battery/ecoflow/river/{name}/status", "icon": "activity", "is_state": true }
+  ]
+}
